@@ -1,0 +1,66 @@
+#!/usr/bin/python3
+
+
+# (C) Copyright 2017
+# Urs Fässler, bbv Software Services, https://www.bbv.ch
+#
+# SPDX-License-Identifier:	GPL-3.0
+
+
+import argparse
+import os
+import sys
+
+
+def readFileContent(filename) :
+	content = []
+
+	fobj = open(filename)
+	for line in fobj:
+		content.append(line.strip())
+	fobj.close()
+
+	return content
+
+
+def listFiles(directory) :
+	files = next(os.walk(directory))[2]
+	files.sort()
+	return files
+
+
+def formatContent(filename, content) :
+	return filename + "=\"" + str.join("; ", content) + "\""
+
+
+def formatLine(directory, content) :
+	return directory + " " + str.join(" ", content)
+
+
+def readAndFormat(directory) :
+	output = []
+
+	for filename in listFiles(directory):
+		content = readFileContent(os.path.join(directory, filename))
+		formatted = formatContent(filename, content)
+		output.append(formatted)
+
+	return formatLine(directory, output)
+
+
+def createOutput(directory) :
+	if os.path.isdir(directory) :
+		return [0, readAndFormat(directory)]
+	else:
+		return [-1, directory + " not a directory"]
+
+
+parser = argparse.ArgumentParser(description='List content of sysfs files for logging')
+parser.add_argument('directory', metavar='d', type=str, help='parent directory of the files to log')
+args = parser.parse_args()
+
+res = createOutput(args.directory)
+
+print(res[1])
+sys.exit(res[0])
+
